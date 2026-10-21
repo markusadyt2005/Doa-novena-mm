@@ -9,9 +9,9 @@ http.createServer(async (req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
   if (pathname.startsWith('/api/')) {
     const name = pathname.slice(5);
-    if (!['push-config', 'subscription', 'test-notification', 'pengingat-doa'].includes(name)) { res.writeHead(404).end(); return; }
+    if (!['push-config', 'subscription', 'test-notification', 'pengingat-doa', 'couple-room'].includes(name)) { res.writeHead(404).end(); return; }
     let body = '';
-    for await (const chunk of req) { body += chunk; if (body.length > 6000) { res.writeHead(413).end(); return; } }
+    for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body) > (name === 'couple-room' ? 500000 : 6000)) { res.writeHead(413).end(); return; } }
     try { req.body = body ? JSON.parse(body) : undefined; } catch { res.writeHead(400).end(); return; }
     res.status = code => { res.statusCode = code; return res; };
     res.json = value => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(value)); };

@@ -1,11 +1,27 @@
 # Ruang Novena — pengingat iPhone
 
-Web doa dan absen yang sama, ditambah pengingat Web Push setiap hari pukul **00.00 WIB**. Satu rangkaian doa lengkap tetap dihitung satu absen. Data absen, nama, dan intensi masih lokal di tiap browser/perangkat; pembaruan ini tidak menyinkronkannya. Hanya data langganan push perangkat (endpoint dan kunci enkripsi) yang disimpan di server.
+Web doa dan absen, pengingat Web Push setiap hari pukul **00.00 WIB**, serta ruang doa pribadi untuk menyinkronkan kedua HP. Satu rangkaian doa lengkap dihitung satu absen. Sebelum dihubungkan, data tetap lokal. Setelah kedua HP memakai kode ruang yang sama, nama, intensi, hitungan, dan riwayat dapat dilihat bersama.
+
+## Melihat absen pasangan dari HP berbeda
+
+1. Buka web terbaru pada HP kamu, tekan **Hubungkan kedua HP**, lalu pilih profil kamu, misalnya Markus.
+2. Jika ada absen atau intensi lama di HP ini, centang **Bawa absen dan intensi lama profil ini**. Tekan **Buat ruang baru**.
+3. Tekan **Salin kode ruang**, lalu kirim sendiri kode itu kepada pasangan. Kode ini menjadi akses privat untuk melihat dan mengubah data ruang; simpan bersama pasangan.
+4. Pada HP pasangan, buka web yang sama → **Hubungkan kedua HP** → pilih profil pasangan, misalnya Mega → tempel kode tadi → **Gabung ruang**. Bawa data lama profil pasangan bila diperlukan. **Buat satu ruang saja**, lalu gabung ke ruang yang sama pada perangkat lainnya.
+5. Setelah terhubung, kedua profil dan riwayat terlihat di kedua HP. Pembaruan diperiksa setiap 15 detik selama halaman terbuka, ketika aplikasi dibuka kembali, serta lewat **Sinkronkan sekarang**.
+
+Absen saat offline disimpan dalam antrean di HP dan dikirim saat koneksi kembali. Pesan status membedakan data tersinkron dari data yang masih menunggu. Jangan menghapus data browser atau keluar dari ruang sebelum antrean terkirim. Notifikasi tidak otomatis menambah absen.
+
+Data lama dicadangkan di penyimpanan browser dengan kunci `novena-before-sync-v1` sebelum pertama kali bergabung. Membawa data lama hanya berlaku pada profil yang dipilih dan hanya jika profil itu belum mempunyai data di ruang. Data profil pasangan tidak ditimpa. Jika muncul pesan profil sudah memiliki data, matikan centang bawa data lama untuk menggunakan data ruang yang sudah ada; cadangan lokal tetap ada.
+
+Sinkronisasi memakai database Redis dan `APP_ORIGIN` yang sama. **Tidak perlu menambah Environment Variables.** Kode ruang dibuat acak dengan 192 bit, diteruskan lewat header otorisasi, dan hanya hash-nya dipakai sebagai kunci Redis. Tidak ada daftar ruang publik, dan tidak ada kode yang dimasukkan ke URL. Nama/intensi tidak ikut dikirim dalam push notification.
+
+Perubahan disimpan per operasi dengan identitas unik dan pembaruan atomik sehingga dua HP tidak saling menimpa atau menggandakan absen saat mencoba ulang. Reset dan pembatalan berlaku pada profil yang dipilih. Pembatalan lama ditolak bila sudah ada absen baru dari perangkat lain untuk profil yang sama.
 
 ## Aktivasi sekali di Vercel
 
 1. Gabungkan perubahan ini ke `main`. Vercel akan memasang dependency dan menjalankan `npm run build`. Halaman tersedia di `/` dan `/ruang-novena.html`; file sumber tetap `ruang-novena.html`.
-2. Di proyek Vercel, buka **Storage / Marketplace**, hubungkan **Upstash Redis**, lalu pilih database untuk proyek ini. Integrasi biasanya menambahkan `KV_REST_API_URL` dan `KV_REST_API_TOKEN` secara otomatis. Aplikasi langsung membaca keduanya; **tidak perlu menyalin ulang dengan nama UPSTASH**. Database ini menyimpan pendaftaran kedua iPhone secara persisten, bukan hitungan doa.
+2. Di proyek Vercel, buka **Storage / Marketplace**, hubungkan **Upstash Redis**, lalu pilih database untuk proyek ini. Integrasi biasanya menambahkan `KV_REST_API_URL` dan `KV_REST_API_TOKEN` secara otomatis. Aplikasi langsung membaca keduanya; **tidak perlu menyalin ulang dengan nama UPSTASH**. Database menyimpan pendaftaran notifikasi serta data ruang doa yang sudah dihubungkan.
 3. Buka `https://doa-novena.vercel.app/setup-keys.html`, tekan **Buat kunci untuk proyek saya**, lalu salin tiga nilainya ke Vercel. Kunci dibuat di browsermu, tidak dikirim ke server, dan akan hilang bila halaman ditutup. Alternatif dari komputer: di folder repo jalankan `npm install`, lalu `npm run setup:keys`. **Jangan unggah nilai rahasianya ke GitHub atau HTML**. Buat satu kali dan simpan nilainya. Mengganti pasangan VAPID mengharuskan iPhone mendaftar ulang.
 4. Buka **Vercel → proyek → Settings → Environment Variables**. Pastikan dua variabel database dari integrasi tersedia untuk **Production**, lalu tambahkan empat variabel lainnya di tabel berikut.
 5. **Redeploy** deployment Production setelah variabel tersimpan. Jika integrasi Redis menambahkan variabel ke Preview saja, tambahkan juga ke Production. Di **Settings → Cron Jobs**, pastikan `/api/pengingat-doa` aktif. Penjadwalan produksi tidak berjalan pada Preview.
