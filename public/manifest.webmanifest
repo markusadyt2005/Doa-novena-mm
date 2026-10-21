@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "Ruang Novena — Doa Berdua",
+  "short_name": "Ruang Novena",
+  "description": "Doa Novena Tiga Salam Maria dan pengingat doa berdua.",
+  "lang": "id",
+  "start_url": "/ruang-novena.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffcf2",
+  "theme_color": "#ce3e66",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
