@@ -5,19 +5,21 @@ Web doa dan absen yang sama, ditambah pengingat Web Push setiap hari pukul **00.
 ## Aktivasi sekali di Vercel
 
 1. Gabungkan perubahan ini ke `main`. Vercel akan memasang dependency dan menjalankan `npm run build`. Halaman tersedia di `/` dan `/ruang-novena.html`; file sumber tetap `ruang-novena.html`.
-2. Di proyek Vercel, buka **Storage / Marketplace**, hubungkan **Upstash Redis**, lalu pilih database untuk proyek ini. Alternatif: buat database Redis di [Upstash Console](https://console.upstash.com/) dan salin REST URL dan token ke Vercel. Database ini menyimpan pendaftaran kedua iPhone secara persisten, bukan hitungan doa.
+2. Di proyek Vercel, buka **Storage / Marketplace**, hubungkan **Upstash Redis**, lalu pilih database untuk proyek ini. Integrasi biasanya menambahkan `KV_REST_API_URL` dan `KV_REST_API_TOKEN` secara otomatis. Aplikasi langsung membaca keduanya; **tidak perlu menyalin ulang dengan nama UPSTASH**. Database ini menyimpan pendaftaran kedua iPhone secara persisten, bukan hitungan doa.
 3. Buka `https://doa-novena.vercel.app/setup-keys.html`, tekan **Buat kunci untuk proyek saya**, lalu salin tiga nilainya ke Vercel. Kunci dibuat di browsermu, tidak dikirim ke server, dan akan hilang bila halaman ditutup. Alternatif dari komputer: di folder repo jalankan `npm install`, lalu `npm run setup:keys`. **Jangan unggah nilai rahasianya ke GitHub atau HTML**. Buat satu kali dan simpan nilainya. Mengganti pasangan VAPID mengharuskan iPhone mendaftar ulang.
-4. Buka **Vercel → proyek → Settings → Environment Variables**, tambahkan variabel di tabel berikut untuk **Production**.
+4. Buka **Vercel → proyek → Settings → Environment Variables**. Pastikan dua variabel database dari integrasi tersedia untuk **Production**, lalu tambahkan empat variabel lainnya di tabel berikut.
 5. **Redeploy** deployment Production setelah variabel tersimpan. Jika integrasi Redis menambahkan variabel ke Preview saja, tambahkan juga ke Production. Di **Settings → Cron Jobs**, pastikan `/api/pengingat-doa` aktif. Penjadwalan produksi tidak berjalan pada Preview.
 
 | Variabel | Nilai |
 | --- | --- |
 | `APP_ORIGIN` | `https://doa-novena.vercel.app` (tanpa `/` di akhir; ganti bila domain utama berubah) |
-| `UPSTASH_REDIS_REST_URL` | REST URL dari database Upstash Redis |
-| `UPSTASH_REDIS_REST_TOKEN` | REST token yang dapat membaca **dan menulis**, bukan readonly token |
+| `KV_REST_API_URL` | REST URL dari database, biasanya sudah dibuat otomatis oleh integrasi |
+| `KV_REST_API_TOKEN` | REST token biasa yang dapat membaca **dan menulis**, biasanya sudah dibuat otomatis oleh integrasi |
 | `VAPID_PUBLIC_KEY` | Hasil `npm run setup:keys` |
 | `VAPID_PRIVATE_KEY` | Hasil `npm run setup:keys`; rahasia |
 | `CRON_SECRET` | Hasil `npm run setup:keys`; rahasia; Vercel menyertakannya sebagai `Authorization: Bearer …` |
+
+Untuk database yang diatur manual, pasangan `UPSTASH_REDIS_REST_URL` dan `UPSTASH_REDIS_REST_TOKEN` juga didukung. Jika kedua pasangan lengkap, pasangan `UPSTASH_...` diprioritaskan. Pasangan yang belum lengkap diabaikan; URL dan token dari dua pasangan tidak dicampur. `KV_REST_API_READ_ONLY_TOKEN`, `KV_URL`, dan `REDIS_URL` tidak digunakan oleh pengingat.
 
 Vercel menggunakan UTC. Jadwal `0 17 * * *` berarti setiap pukul 00.00 WIB pada hari berikutnya. **Pada paket Hobby, Vercel dapat memanggil jadwal kapan saja antara 00.00–00.59 WIB.** Paket Pro memiliki presisi per menit; pengantaran ke HP tetap dipengaruhi koneksi, izin, dan mode Fokus. Jangan menjanjikan alarm tepat waktu dari Web Push.
 

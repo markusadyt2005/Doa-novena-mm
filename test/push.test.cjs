@@ -52,6 +52,38 @@ test('public config contains no private keys or Redis credentials', async t => {
   delete process.env.VAPID_PRIVATE_KEY;
   assert.equal((await invoke(configHandler)).data.configured, false);
 });
+test('Vercel integration KV variables work without manually copied UPSTASH aliases', t => {
+  setup(t);
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  Object.assign(process.env, { KV_REST_API_URL: 'https://integration.example.com', KV_REST_API_TOKEN: 'integration-token' });
+  const cfg = p.configuration();
+  assert.equal(cfg.redisUrl, process.env.KV_REST_API_URL);
+  assert.equal(cfg.redisToken, process.env.KV_REST_API_TOKEN);
+});
+test('complete manual pair takes precedence over the integration pair', t => {
+  setup(t);
+  Object.assign(process.env, { KV_REST_API_URL: 'https://integration.example.com', KV_REST_API_TOKEN: 'integration-token' });
+  const cfg = p.configuration();
+  assert.equal(cfg.redisUrl, process.env.UPSTASH_REDIS_REST_URL);
+  assert.equal(cfg.redisToken, process.env.UPSTASH_REDIS_REST_TOKEN);
+});
+test('partial manual configuration falls back to a complete KV pair without mixing credentials', t => {
+  setup(t);
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  Object.assign(process.env, { KV_REST_API_URL: 'https://integration.example.com', KV_REST_API_TOKEN: 'integration-token' });
+  const cfg = p.configuration();
+  assert.equal(cfg.redisUrl, 'https://integration.example.com');
+  assert.equal(cfg.redisToken, 'integration-token');
+});
+test('partial pairs and readonly tokens cannot configure the writable database', t => {
+  setup(t);
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  delete process.env.KV_REST_API_URL;
+  process.env.KV_REST_API_TOKEN = 'unrelated-token';
+  process.env.KV_REST_API_READ_ONLY_TOKEN = 'readonly-token';
+  assert.throws(() => p.configuration(), { status: 503 });
+});
 test('cron rejects anonymous requests before storage or push', async t => {
   const store = setup(t); const res = await invoke(cronHandler);
   assert.equal(res.code, 401); assert.equal(store.commands.length, 0); assert.equal(store.send.mock.callCount(), 0);
