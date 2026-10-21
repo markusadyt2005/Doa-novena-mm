@@ -5,7 +5,7 @@ self.addEventListener('activate', event => event.waitUntil(self.clients.claim())
 
 self.addEventListener('push', event => {
   let payload = {};
-  try { payload = event.data ? event.data.json() : {}; } catch { /* Still show a visible reminder. */ }
+  try { const data = event.data ? event.data.json() : {}; if (data && typeof data === 'object') payload = data; } catch { /* Still show a visible reminder. */ }
   event.waitUntil(self.registration.showNotification(payload.title || 'Waktunya berdoa bersama 🤍', {
     body: payload.body || 'Mari luangkan waktu untuk Novena Tiga Salam Maria.',
     icon: '/icons/icon-192.png',

@@ -9,12 +9,12 @@ test('push worker always displays a notification, including malformed payloads',
   const handlers = {}, shown = [];
   const self = { addEventListener(name, fn) { handlers[name] = fn; }, location: { origin: 'https://novena.example.com' }, registration: { showNotification: async (title, options) => shown.push({ title, options }) } };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../public/sw.js'), 'utf8'), { self, URL });
-  for (const data of [null, { json() { throw new Error('invalid'); } }, { json: () => ({ title: 'Doa bersama', body: 'Waktunya berdoa', tag: 'today' }) }]) {
+  for (const data of [null, { json() { throw new Error('invalid'); } }, { json: () => null }, { json: () => ({ title: 'Doa bersama', body: 'Waktunya berdoa', tag: 'today' }) }]) {
     let promise; handlers.push({ data, waitUntil(value) { promise = value; } }); await promise;
   }
-  assert.equal(shown.length, 3);
+  assert.equal(shown.length, 4);
   assert.equal(shown[0].options.data.url, '/ruang-novena.html?doa=1');
-  assert.equal(shown[2].title, 'Doa bersama');
+  assert.equal(shown[3].title, 'Doa bersama');
 });
 test('notification tap only opens the same-origin prayer page, ignoring external payload URLs', async () => {
   const handlers = {}; let opened, closed = false;
