@@ -1,0 +1,13 @@
+{
+  "name": "ruang-novena",
+  "version": "1.1.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "dev": "node scripts/dev.cjs",
+    "test": "node --test test/*.test.cjs",
+    "setup:keys": "node scripts/generate-keys.cjs"
+  },
+  "dependencies": { "web-push": "3.6.7" },
+  "engines": { "node": "24.x" }
+}
